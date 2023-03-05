@@ -6,7 +6,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 from pathlib import Path
 import pickle
-
+import threading
+imgScores=None
 # Returns a 25x25 pixel box with the given pixel in the center
 def GetSurroundings(img, r, c):
     if r - 12 >= 0 and r + 12 < img.shape[0]:
@@ -92,6 +93,12 @@ def ReflectanceInitialization(img):
         r=r+10
     return scores
 
+def kmeans(img, knn):
+    global imgScores
+    # get matrix of scores for each pixel
+    imgScores = GetMaterialScores(img, knn)
+
+
 def main():
     # Initialize video feed
     cap = cv2.VideoCapture(0)
@@ -107,7 +114,11 @@ def main():
     # Load knn model
     knn = pickle.load(open('knn_material_model', 'rb'))
 
+
+    img=None
     # Initialize frame count
+    kmeansThread = threading.Thread(target=kmeans, args=(img, knn))
+    kmeans.start()
     frames = 1
 
     # Update recommendation based on video feed light levels
@@ -118,8 +129,7 @@ def main():
         # Convert to gray scale to display light levels
         imgG = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        # get matrix of scores for each pixel
-        imgScores = GetMaterialScores(img, knn)
+
 
         # Add to the running total
         scores = cv2.accumulate(imgG, scores)
