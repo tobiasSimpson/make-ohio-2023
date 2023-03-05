@@ -2,8 +2,7 @@ import cv2
 import time
 import matplotlib.pyplot as plt
 import numpy as np
-
-SLIDINGFRAMES = 1
+import xgboost as xgb
 
 # Returns a 25x25 pixel box with the given pixel in the center
 def GetSurroundings(img, r, c):
@@ -44,6 +43,7 @@ def ReflectanceInitialization(img):
     return scores
 
 def main():
+
     # Initialize video feed
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,1080)
@@ -89,4 +89,19 @@ def main():
         cv2.waitKey(1)
 
 if __name__ == "__main__":
-    main()
+    # Initialize AI model
+    model = xgb.XGBClassifier(
+        objective='multi:softmax',
+        learning_rate='0.36',
+        max_depth=5,
+        alpha=1,
+        eval_metric='mlogloss',
+        early_stopping_rounds=15
+    )
+
+
+    model.fit(X_train,y_train, verbose=0, eval_set=[(X_test,y_test)])
+
+    #results = model.evals_result()
+    model.save_model('basicModel.json')
+
