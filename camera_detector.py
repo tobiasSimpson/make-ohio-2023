@@ -3,7 +3,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-SLIDINGFRAMES = 2
+SLIDINGFRAMES = 1
 
 # Returns a 25x25 pixel box with the given pixel in the center
 def GetSurroundings(img, r, c):
@@ -52,9 +52,7 @@ def main():
     # Initialize accumulation
     success, img = cap.read()
     scores = ReflectanceInitialization(img)
-    slidingScale = np.zeros((SLIDINGFRAMES, img.shape[0], img.shape[1], img.shape[2]))
-    #slidingScores = np.zeros((SLIDINGFRAMES, img.shape[0], img.shape[1]))
-    slidingIdx = 0
+
     # Initialize frame count
     frames = 1
 
@@ -63,53 +61,29 @@ def main():
         # Read a new frame
         success, img = cap.read()
 
-        # Add image to sliding frame
-        slidingScale[slidingIdx] = img
-        #slidingScores[slidingIdx] = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
         # Convert to gray scale to display light levels
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        imgG = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         # Add to the running total
-        scores = cv2.accumulate(img, scores)
+        scores = cv2.accumulate(imgG, scores)
 
         # Increment frame count
         frames = frames + 1
 
-        # Increment sliding frame count
-        if slidingIdx == (SLIDINGFRAMES - 1):
-            slidingIdx = 0
-        else:
-            slidingIdx = slidingIdx + 1
-
         # Display the scaled accumlation
-        #cv2.imshow('Solar Locator', scores/(255*frames))
+        cv2.imshow('Solar Locator', scores/(255*frames))
 
         # Accumulated brightness bit mask
-        brightMask = cv2.inRange(scores/frames, np.percentile(scores, 95)/frames, 255)
+        brightMaskG = cv2.inRange(scores/frames, np.percentile(scores, 95)/frames, 255)
+        brightMaskB = cv2.inRange(imgG, np.percentile(imgG, 95), 255)
 
-        # Calculate sliding average
-        slidingScaleTotal = np.zeros(slidingScale[0].shape)
-        #slidingScoresTotal = np.zeros(slidingScores[0].shape)
-        for i in range(0, SLIDINGFRAMES):
-            slidingScaleTotal = cv2.accumulate(slidingScale[i], slidingScaleTotal)
-            #slidingScoresTotal = cv2.accumulate(slidingScores[i], slidingScoresTotal)
-
-        # Mask bright areas with green
-        slidingScaleTotal = slidingScaleTotal/(255*SLIDINGFRAMES)
-        #slidingScoresTotal = slidingScoresTotal/(255*SLIDINGFRAMES)
-
-        slidingScaleTotal32 = np.float32(slidingScaleTotal)
-        slidingGray = cv2.cvtColor(slidingScaleTotal32, cv2.COLOR_BGR2GRAY)
-        slidingBrightMask = cv2.inRange(slidingGray, np.percentile(slidingGray, 95), 255)
-
-        slidingScaleTotal[brightMask > 0] = [0, 0, 0]
-        slidingScaleTotal[slidingBrightMask > 0] = [0, 0, 0]
-        slidingScaleTotal[brightMask > 0] += [0, 255, 0]
-        slidingScaleTotal[slidingBrightMask > 0] += [255, 0, 0]
+        img[brightMaskG > 0] = [0, 0, 0]
+        img[brightMaskB > 0] = [0, 0, 0]
+        img[brightMaskG > 0] += np.array((0,255,0), dtype='uint8')
+        img[brightMaskB > 0] += np.array((255,0,0), dtype='uint8')
 
         # Display the sliding average
-        cv2.imshow('Sliding Frame', slidingScaleTotal)
+        cv2.imshow('Sliding Frame', img)
 
         # Wait
         cv2.waitKey(1)
