@@ -3,6 +3,8 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
+SLIDINGFRAMES = 30
+
 # Returns a 25x25 pixel box with the given pixel in the center
 def GetSurroundings(img, r, c):
     if r - 12 >= 0 and r + 12 < img.shape[0]:
@@ -50,6 +52,8 @@ def main():
     # Initialize accumulation
     success, img = cap.read()
     scores = ReflectanceInitialization(img)
+    slidingScale = np.zeros((SLIDINGFRAMES, img.shape[0], img.shape[1], img.shape[2]))
+    slidingIdx = 0
     # Initialize frame count
     frames = 1
 
@@ -57,6 +61,9 @@ def main():
     while True:
         # Read a new frame
         success, img = cap.read()
+
+        # Add image to sliding frame
+        slidingScale[slidingIdx] = img
 
         # Convert to gray scale to display light levels
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -67,11 +74,21 @@ def main():
         # Increment frame count
         frames = frames + 1
 
+        # Increment sliding frame count
+        if slidingIdx == (SLIDINGFRAMES - 1):
+            slidingIdx = 0
+        else:
+            slidingIdx = slidingIdx + 1
+
         # Display the scaled accumlation
         cv2.imshow('Solar Locator', scores/(255*frames))
+        slidingScaleTotal = np.zeros(slidingScale[0].shape)
+        for i in range(0, SLIDINGFRAMES):
+            slidingScaleTotal = cv2.accumulate(slidingScale[i], slidingScaleTotal)
+        cv2.imshow('Sliding Frame', slidingScaleTotal/(255*SLIDINGFRAMES))
 
         # Wait
-        cv2.waitKey(100)
+        cv2.waitKey(1)
 
 if __name__ == "__main__":
     main()
