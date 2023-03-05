@@ -6,8 +6,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 from pathlib import Path
 import pickle
-import threading
-imgScores=None
+
 # Returns a 25x25 pixel box with the given pixel in the center
 def GetSurroundings(img, r, c):
     if r - 12 >= 0 and r + 12 < img.shape[0]:
@@ -32,6 +31,11 @@ def GetSurroundings(img, r, c):
         elif c - 12 < 0:
             return img[r-12:img.shape[0] - 1,0:c+12,:]
 
+def downsample(img, factor):
+    return img[::factor,::factor]
+
+def upsample(img, factor):
+    return img.repeat(factor, axis=0).repeat(factor, axis=1)
 
 def GetScores(material):
     # Assign initial score based on material type
@@ -52,12 +56,13 @@ def GetScores(material):
 
 def GetMaterialScores(img, knn):
     img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+    img=downsample(img, 4)
     vectorized = img.reshape((-1,3))
 
     vectorized = np.float32(vectorized)
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-    K = 8
-    attempts=1
+    K = 10
+    attempts=6
     ret,label,center=cv2.kmeans(vectorized,K,None,criteria,attempts,cv2.KMEANS_PP_CENTERS)
     label=label.reshape(img.shape[0:2])
     center = np.uint8(center)
@@ -68,6 +73,7 @@ def GetMaterialScores(img, knn):
 
     # result= lambda label:scores[label]
     result=np.array(list(map(lambda l: scores[l],label)))
+    result =  upsample(result, 4)
     return result
 
 
@@ -93,12 +99,6 @@ def ReflectanceInitialization(img):
         r=r+10
     return scores
 
-def kmeans(img, knn):
-    global imgScores
-    # get matrix of scores for each pixel
-    imgScores = GetMaterialScores(img, knn)
-
-
 def main():
     # Initialize video feed
     cap = cv2.VideoCapture(0)
@@ -107,6 +107,7 @@ def main():
 
     # Initialize accumulation
     success, img = cap.read()
+    img = downsample(img, 2)
 
     scores = ReflectanceInitialization(img)
 
@@ -114,22 +115,19 @@ def main():
     # Load knn model
     knn = pickle.load(open('knn_material_model', 'rb'))
 
-
-    img=None
     # Initialize frame count
-    kmeansThread = threading.Thread(target=kmeans, args=(img, knn))
-    kmeans.start()
     frames = 1
 
     # Update recommendation based on video feed light levels
     while True:
         # Read a new frame
         success, img = cap.read()
-
+        img = downsample(img, 2)
         # Convert to gray scale to display light levels
         imgG = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-
+        # get matrix of scores for each pixel
+        imgScores = GetMaterialScores(img, knn)
 
         # Add to the running total
         scores = cv2.accumulate(imgG, scores)
