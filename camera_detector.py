@@ -54,11 +54,14 @@ def GetScores(material):
     elif material == "Dirt":
         return 92
 
+# Return a score based on identified surface material type
 def GetMaterialScores(img, knn):
+    # input image downsized to 0.25x size
     img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
     img=downsample(img, 4)
-    vectorized = img.reshape((-1,3))
 
+    # vectorize and attempt K-Means clustering
+    vectorized = img.reshape((-1,3))
     vectorized = np.float32(vectorized)
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
     K = 10
@@ -67,11 +70,11 @@ def GetMaterialScores(img, knn):
     label=label.reshape(img.shape[0:2])
     center = np.uint8(center)
 
+    # use KNN to match each K-means zone to a known surface
     materials = knn.predict(center)
     scores = np.vectorize(GetScores)(materials)
-    # breakpoint()
 
-    # result= lambda label:scores[label]
+    # store and upsample result to regain original resolution
     result=np.array(list(map(lambda l: scores[l],label)))
     result =  upsample(result, 4)
     return result
@@ -138,7 +141,7 @@ def main():
         # Accumulated brightness bit mask
         brightMaskG = cv2.inRange(scores/frames, np.percentile(scores, 95)/frames, 255)
         brightMaskB = cv2.inRange(imgG, np.percentile(imgG, 95), 255)
-        forCalc = (imgScores+(scores/(255*frames)))/2
+        forCalc = (imgScores+(imgG))/2
         brightMaskR = cv2.inRange(forCalc, np.percentile(forCalc, 95), 255)
 
         # Color Masking
@@ -150,14 +153,14 @@ def main():
         cv2.imshow('Live Solar Update', img)
 
         # Quit on 'q'
-        if cv2.waitKey(10) & 0xFF == ord('q'):
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             break 
     while True:
         # Display the scaled accumlation
         cv2.imshow('Solar Locator', scores/(255*frames))
 
         # Quit on 'q'
-        if cv2.waitKey(10) & 0xFF == ord('q'):
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             break 
 
 if __name__ == "__main__":
