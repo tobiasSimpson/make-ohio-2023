@@ -1,8 +1,11 @@
 import cv2
-import time
-import matplotlib.pyplot as plt
 import numpy as np
-import xgboost as xgb
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
+from pathlib import Path
+import pickle
 
 # Returns a 25x25 pixel box with the given pixel in the center
 def GetSurroundings(img, r, c):
@@ -28,22 +31,43 @@ def GetSurroundings(img, r, c):
         elif c - 12 < 0:
             return img[r-12:img.shape[0] - 1,0:c+12,:]
 
-def DetectMaterial(surroundings):
-    return 0
-
+# Fill initial reflectance scores
 def ReflectanceInitialization(img):
     # Initialize reflectance scores
     scores = np.zeros(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY).shape)
 
+    # Load knn model
+    knn = pickle.load(open('knn_material_model', 'rb'))
+
     # Assign reflectance scores to every pixel based on material
-    for r in range(0, scores.shape[0]):
-        for c in range(0, scores.shape[1]):
+    r = 0
+    while r < scores.shape[0]:
+        c = 0
+        while c < scores.shape[1]:
             surroundings = GetSurroundings(img, r, c)
-            scores[r][c] = DetectMaterial(surroundings)
+            material = knn.predict([[np.mean(surroundings[:,:,0]), np.mean(surroundings[:,:,1]), np.mean(surroundings[:,:,2])]])
+            print(material,r,c)
+            # Assign initial score based on material type
+            if material == "Veneer":
+                score = 0
+            elif material == "Concrete":
+                score = 0
+            elif material == "Paper":
+                score = 0
+            elif material == "Drywall":
+                score = 0
+            elif material == "Cardboard":
+                score = 0
+            elif material == "Grass":
+                score = 0
+            elif material == "Dirt":
+                score = 0
+            scores[r:r+10][c:c+10] = score
+            c = c+10
+        r=r+10
     return scores
 
 def main():
-
     # Initialize video feed
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,1080)
@@ -51,8 +75,9 @@ def main():
 
     # Initialize accumulation
     success, img = cap.read()
-    scores = ReflectanceInitialization(img)
 
+    scores = ReflectanceInitialization(img)
+    cv2.imshow("Initial Scores", scores)
     # Initialize frame count
     frames = 1
 
@@ -71,7 +96,7 @@ def main():
         frames = frames + 1
 
         # Display the scaled accumlation
-        cv2.imshow('Solar Locator', scores/(255*frames))
+        #cv2.imshow('Solar Locator', scores/(255*frames))
 
         # Accumulated brightness bit mask
         brightMaskG = cv2.inRange(scores/frames, np.percentile(scores, 95)/frames, 255)
@@ -83,25 +108,37 @@ def main():
         img[brightMaskB > 0] += np.array((255,0,0), dtype='uint8')
 
         # Display the sliding average
-        cv2.imshow('Sliding Frame', img)
+        #cv2.imshow('Live Solar Update', img)
 
         # Wait
         cv2.waitKey(1)
 
 if __name__ == "__main__":
-    # Initialize AI model
-    model = xgb.XGBClassifier(
-        objective='multi:softmax',
-        learning_rate='0.36',
-        max_depth=5,
-        alpha=1,
-        eval_metric='mlogloss',
-        early_stopping_rounds=15
-    )
+    # Create the model if it does not exist
+    path = Path('./knn_material_model')
+    if not path.is_file():
+        # Load Training Data
+        materials = pd.read_csv("RGBdata.csv")
+        X = materials.drop("Class", axis=1)
+        y = materials["Class"]
 
+        # Train Model
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
 
-    model.fit(X_train,y_train, verbose=0, eval_set=[(X_test,y_test)])
+        knn = KNeighborsClassifier(n_neighbors=3)
+        knn.fit(X_train, y_train)
 
-    #results = model.evals_result()
-    model.save_model('basicModel.json')
+        # Its important to use binary mode 
+        knnPickle = open('knn_material_model', 'wb') 
+            
+        # source, destination 
+        pickle.dump(knn, knnPickle)  
 
+        # close the file
+        knnPickle.close()
+  
+    # Execute main
+    main()

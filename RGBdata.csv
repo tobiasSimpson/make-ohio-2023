@@ -1,2 +1,107 @@
-Cardboard,Drywall,Paper,Laptop,Concrete,Sun,Tree,Lime Scooter,Veneer,Phone Screen
-Veneer, 204, 129, 84
+B,G,R,Class
+84,129,204,Veneer
+99,142,211,Veneer
+60,99,173,Veneer
+116,143,200,Veneer
+53,87,145,Veneer
+52,83,137,Veneer
+43,64,116,Veneer
+141,177,242,Veneer
+109,144,210,Veneer
+92,126,192,Veneer
+47,96,170,Veneer
+70,119,197,Veneer
+54,93,153,Veneer
+61,84,132,Veneer
+45,89,163,Veneer
+130,149,163,Concrete
+77,88,96,Concrete
+127,144,160,Concrete
+122,140,157,Concrete
+105,116,128,Concrete
+188,199,211,Concrete
+64,78,90,Concrete
+175,195,209,Concrete
+113,131,148,Concrete
+120,138,155,Concrete
+112,129,146,Concrete
+104,116,128,Concrete
+132,149,165,Concrete
+127,147,160,Concrete
+116,136,153,Concrete
+211,226,236,Paper
+218,237,246,Paper
+216,234,243,Paper
+227,240,247,Paper
+203,221,230,Paper
+197,210,226,Paper
+228,240,245,Paper
+218,238,247,Paper
+204,222,231,Paper
+205,223,232,Paper
+208,226,235,Paper
+226,244,251,Paper
+210,225,235,Paper
+209,227,236,Paper
+204,211,220,Paper
+239,241,241,Drywall
+237,239,239,Drywall
+236,238,238,Drywall
+247,247,247,Drywall
+235,237,237,Drywall
+223,227,232,Drywall
+238,240,239,Drywall
+217,221,226,Drywall
+240,242,241,Drywall
+240,242,242,Drywall
+239,241,241,Drywall
+238,241,240,Drywall
+222,227,231,Drywall
+216,220,225,Drywall
+89,141,187,Cardboard
+84,139,180,Cardboard
+91,129,179,Cardboard
+147,179,211,Cardboard
+100,140,192,Cardboard
+102,147,188,Cardboard
+115,157,189,Cardboard
+88,124,167,Cardboard
+79,131,173,Cardboard
+128,163,207,Cardboard
+168,193,216,Cardboard
+90,139,180,Cardboard
+84,135,176,Cardboard
+117,159,191,Cardboard
+87,123,166,Cardboard
+86,139,184,Cardboard
+155, 222, 40,Grass
+110, 144, 28,Grass
+35, 98, 37,Grass
+121, 186, 19,Grass
+131, 192, 9,Grass
+81, 138, 48,Grass
+157, 184, 40,Grass
+56, 111, 68,Grass
+127, 166, 77,Grass
+151, 227, 75,Grass
+120, 165, 101,Grass
+64, 103, 32,Grass
+139, 177, 19,Grass
+58, 152, 13,Grass
+106, 145, 45,Grass
+108, 149, 74,Grass
+201, 157, 114,Dirt
+200, 167, 128,Dirt
+245, 237, 217,Dirt
+215, 171, 126,Dirt
+240, 199, 150,Dirt
+221, 186, 151,Dirt
+213, 173, 139,Dirt
+152, 102, 59,Dirt
+130, 87, 42,Dirt
+216, 164, 112,Dirt
+198, 149, 101,Dirt
+60, 41, 40,Dirt
+164, 132, 111,Dirt
+147, 137, 102,Dirt
+108, 64, 35,Dirt
