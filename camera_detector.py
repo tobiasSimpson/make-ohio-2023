@@ -130,7 +130,7 @@ def main():
         # Accumulated brightness bit mask
         brightMaskG = cv2.inRange(scores/frames, np.percentile(scores, 95)/frames, 255)
         brightMaskB = cv2.inRange(imgG, np.percentile(imgG, 95), 255)
-        forCalc = (imgScores*(scores/(255*frames)))/2
+        forCalc = (imgScores+(scores/(255*frames)))/2
         brightMaskR = cv2.inRange(forCalc, np.percentile(forCalc, 95), 255)
 
         # Color Masking
