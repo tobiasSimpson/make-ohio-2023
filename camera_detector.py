@@ -3,31 +3,33 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Initialize video feed
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH,1080)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
 
-success, scores = cap.read()
-scores = cv2.cvtColor(scores, cv2.COLOR_BGR2GRAY)
+# Initialize accumulation
+scores = np.zeros((720,1280))
+# Initialize frame count
+frames = 0
 
-
+# Update recommendation based on video feed light levels
 while True:
+    # Read a new frame
     success, img = cap.read()
+    # Convert to gray scale to display light levels
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    # Create mask to only select white
-    # maskR = cv2.inRange(img, np.array([0, 0, 150]), np.array([75, 75, 255]))
-    # maskBk = cv2.inRange(img, np.array([200, 200, 200]), np.array([255, 255, 255]))
 
-    # scoresSum = np.sum(scores)
-    # scores = np.append(scores, np.zeros((1280-720, 1280)), axis=0) / scoresSum
-    # img = np.append(img, np.zeros((1280-720, 1280)), axis=0) / 255
-    # scores = np.matmul(scores, img)
+    # Add to the running total
+    scores = cv2.accumulate(img, scores)
 
-    img2 = np.float32(np.zeros(img.size))
-    img2 = cv2.accumulate(img, img2)
-    img2 = cv2.accumulate(scores, img2)
-    scores = scores/2
+    # Increment frame count
+    frames = frames + 1
 
-    cv2.imshow('Reflectance Detection', scores)
-    print(scores)
+    # Display the scaled accumlation
+    cv2.imshow('Reflectance Detection', scores/(255*frames))
+
+    # Wait
     cv2.waitKey(1)
+
+    print(scores)
