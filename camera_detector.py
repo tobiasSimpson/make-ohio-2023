@@ -46,7 +46,7 @@ def ReflectanceInitialization(img):
         while c < scores.shape[1]:
             surroundings = GetSurroundings(img, r, c)
             material = knn.predict([[np.mean(surroundings[:,:,0]), np.mean(surroundings[:,:,1]), np.mean(surroundings[:,:,2])]])
-            print(material,r,c)
+
             # Assign initial score based on material type
             if material == "Veneer":
                 score = 208
@@ -77,7 +77,7 @@ def main():
     success, img = cap.read()
 
     scores = ReflectanceInitialization(img)
-    cv2.imshow("Initial Scores", scores)
+
     # Initialize frame count
     frames = 1
 
@@ -96,7 +96,7 @@ def main():
         frames = frames + 1
 
         # Display the scaled accumlation
-        #cv2.imshow('Solar Locator', scores/(255*frames))
+        cv2.imshow('Solar Locator', scores/(255*frames))
 
         # Accumulated brightness bit mask
         brightMaskG = cv2.inRange(scores/frames, np.percentile(scores, 95)/frames, 255)
