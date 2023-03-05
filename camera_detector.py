@@ -49,19 +49,19 @@ def ReflectanceInitialization(img):
             print(material,r,c)
             # Assign initial score based on material type
             if material == "Veneer":
-                score = 0
+                score = 208
             elif material == "Concrete":
-                score = 0
+                score = 255
             elif material == "Paper":
-                score = 0
+                score = 158
             elif material == "Drywall":
-                score = 0
+                score = 50
             elif material == "Cardboard":
-                score = 0
+                score = 132
             elif material == "Grass":
-                score = 0
+                score = 16
             elif material == "Dirt":
-                score = 0
+                score = 92
             scores[r:r+10][c:c+10] = score
             c = c+10
         r=r+10
