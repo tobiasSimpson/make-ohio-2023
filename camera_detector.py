@@ -31,6 +31,45 @@ def GetSurroundings(img, r, c):
         elif c - 12 < 0:
             return img[r-12:img.shape[0] - 1,0:c+12,:]
 
+
+def GetScores(material):
+    # Assign initial score based on material type
+    if material == "Veneer":
+        return 208
+    elif material == "Concrete":
+        return 255
+    elif material == "Paper":
+        return 158
+    elif material == "Drywall":
+        return 50
+    elif material == "Cardboard":
+        return 132
+    elif material == "Grass":
+        return 16
+    elif material == "Dirt":
+        return 92
+
+def GetMaterialScores(img, knn):
+    img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+    vectorized = img.reshape((-1,3))
+
+    vectorized = np.float32(vectorized)
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+    K = 8
+    attempts=1
+    ret,label,center=cv2.kmeans(vectorized,K,None,criteria,attempts,cv2.KMEANS_PP_CENTERS)
+    label=label.reshape(img.shape[0:2])
+    center = np.uint8(center)
+
+    materials = knn.predict(center)
+    scores = np.vectorize(GetScores)(materials)
+    # breakpoint()
+
+    # result= lambda label:scores[label]
+    result=np.array(list(map(lambda l: scores[l],label)))
+    return result
+
+
 # Fill initial reflectance scores
 def ReflectanceInitialization(img):
     # Initialize reflectance scores
@@ -47,21 +86,7 @@ def ReflectanceInitialization(img):
             surroundings = GetSurroundings(img, r, c)
             material = knn.predict([[np.mean(surroundings[:,:,0]), np.mean(surroundings[:,:,1]), np.mean(surroundings[:,:,2])]])
 
-            # Assign initial score based on material type
-            if material == "Veneer":
-                score = 208
-            elif material == "Concrete":
-                score = 255
-            elif material == "Paper":
-                score = 158
-            elif material == "Drywall":
-                score = 50
-            elif material == "Cardboard":
-                score = 132
-            elif material == "Grass":
-                score = 16
-            elif material == "Dirt":
-                score = 92
+            score=GetScores(material)
             scores[r:r+10][c:c+10] = score
             c = c+10
         r=r+10
@@ -78,6 +103,10 @@ def main():
 
     scores = ReflectanceInitialization(img)
 
+
+    # Load knn model
+    knn = pickle.load(open('knn_material_model', 'rb'))
+
     # Initialize frame count
     frames = 1
 
@@ -89,6 +118,9 @@ def main():
         # Convert to gray scale to display light levels
         imgG = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+        # get matrix of scores for each pixel
+        imgScores = GetMaterialScores(img, knn)
+
         # Add to the running total
         scores = cv2.accumulate(imgG, scores)
 
@@ -96,7 +128,7 @@ def main():
         frames = frames + 1
 
         # Display the scaled accumlation
-        cv2.imshow('Solar Locator', scores/(255*frames))
+        # cv2.imshow('Solar Locator', scores/(255*frames))
 
         # Accumulated brightness bit mask
         brightMaskG = cv2.inRange(scores/frames, np.percentile(scores, 95)/frames, 255)
@@ -108,7 +140,7 @@ def main():
         img[brightMaskB > 0] += np.array((255,0,0), dtype='uint8')
 
         # Display the sliding average
-        #cv2.imshow('Live Solar Update', img)
+        cv2.imshow('Live Solar Update', img)
 
         # Wait
         cv2.waitKey(1)
@@ -139,6 +171,6 @@ if __name__ == "__main__":
 
         # close the file
         knnPickle.close()
-  
+
     # Execute main
     main()

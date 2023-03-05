@@ -26,12 +26,3 @@ plt.subplot(1,2,2),plt.imshow(result_image)
 plt.title('Segmented Image when K = %i' % K), plt.xticks([]), plt.yticks([])
 plt.show()
 
-
-
-# edges = cv2.Canny(img,150,200)
-# plt.figure(figsize=(figure_size,figure_size))
-# plt.subplot(1,2,1),plt.imshow(img)
-# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-# plt.subplot(1,2,2),plt.imshow(edges,cmap = 'gray')
-# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-# plt.show()
