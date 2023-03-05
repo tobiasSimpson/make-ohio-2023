@@ -127,23 +127,30 @@ def main():
         # Increment frame count
         frames = frames + 1
 
-        # Display the scaled accumlation
-        # cv2.imshow('Solar Locator', scores/(255*frames))
-
         # Accumulated brightness bit mask
         brightMaskG = cv2.inRange(scores/frames, np.percentile(scores, 95)/frames, 255)
         brightMaskB = cv2.inRange(imgG, np.percentile(imgG, 95), 255)
+        forCalc = (imgScores*(scores/(255*frames)))/2
+        brightMaskR = cv2.inRange(forCalc, np.percentile(forCalc, 95), 255)
 
-        img[brightMaskG > 0] = [0, 0, 0]
-        img[brightMaskB > 0] = [0, 0, 0]
-        img[brightMaskG > 0] += np.array((0,255,0), dtype='uint8')
-        img[brightMaskB > 0] += np.array((255,0,0), dtype='uint8')
+        # Color Masking
+        img[brightMaskB > 0] = (255, 0, 0)
+        img[brightMaskG > 0] = (0, 255, 0)
+        img[brightMaskR > 0] = (0, 0, 255)
 
         # Display the sliding average
         cv2.imshow('Live Solar Update', img)
 
-        # Wait
-        cv2.waitKey(1)
+        # Quit on 'q'
+        if cv2.waitKey(10) & 0xFF == ord('q'):
+            break 
+    while True:
+        # Display the scaled accumlation
+        cv2.imshow('Solar Locator', scores/(255*frames))
+
+        # Quit on 'q'
+        if cv2.waitKey(10) & 0xFF == ord('q'):
+            break 
 
 if __name__ == "__main__":
     # Create the model if it does not exist
